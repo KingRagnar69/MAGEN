@@ -1,0 +1,19 @@
+
+.generated-character {
+  margin-top: 32px;
+  text-align: center;
+}
+
+.generated-image {
+  display: block;
+  width: 100%;
+  max-width: 512px;
+  height: auto;
+  margin: 16px auto;
+  border-radius: 12px;
+  object-fit: contain;
+}
+
+.generated-character p {
+  font-weight: 600;
+}
