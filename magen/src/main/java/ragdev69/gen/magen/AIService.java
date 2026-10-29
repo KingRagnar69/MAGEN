@@ -1,8 +1,10 @@
+
 package ragdev69.gen.magen;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -17,7 +19,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
@@ -25,8 +26,8 @@ import java.util.concurrent.ThreadLocalRandom;
 @Service
 public class AIService {
 
-    private static final String COMFYUI_URL =
-            "http://127.0.0.1:8188";
+    @Value("${comfyui.url:http://127.0.0.1:8188}")
+    private String comfyuiUrl;
 
     private static final Path IMAGE_DIRECTORY =
             Paths.get("C:\\Users\\ronak\\MAGEN\\generated-images")
@@ -307,8 +308,11 @@ public class AIService {
             JsonNode workflow = objectMapper.readTree(inputStream);
 
             setWorkflowText(workflow, "4", positivePrompt);
-            setWorkflowText(workflow, "6",
-                    negativePrompt == null ? "" : negativePrompt);
+            setWorkflowText(
+                    workflow,
+                    "6",
+                    negativePrompt == null ? "" : negativePrompt
+            );
 
             JsonNode samplerInputs = workflow.path("7").path("inputs");
 
@@ -327,7 +331,7 @@ public class AIService {
             requestBody.set("prompt", workflow);
 
             HttpRequest submitRequest = HttpRequest.newBuilder()
-                    .uri(URI.create(COMFYUI_URL + "/prompt"))
+                    .uri(URI.create(comfyuiUrl + "/prompt"))
                     .header("Content-Type", "application/json")
                     .POST(HttpRequest.BodyPublishers.ofString(
                             objectMapper.writeValueAsString(requestBody)
@@ -373,7 +377,7 @@ public class AIService {
 
                 HttpRequest historyRequest = HttpRequest.newBuilder()
                         .uri(URI.create(
-                                COMFYUI_URL + "/history/" + encodedId
+                                comfyuiUrl + "/history/" + encodedId
                         ))
                         .GET()
                         .build();
@@ -423,7 +427,7 @@ public class AIService {
             String subfolder = imageNode.path("subfolder").asText();
             String type = imageNode.path("type").asText("output");
 
-            String imageUrl = COMFYUI_URL + "/view?filename="
+            String imageUrl = comfyuiUrl + "/view?filename="
                     + URLEncoder.encode(filename, StandardCharsets.UTF_8)
                     + "&subfolder="
                     + URLEncoder.encode(subfolder, StandardCharsets.UTF_8)
@@ -456,8 +460,7 @@ public class AIService {
                     .nextInt(1000, 10000)
                     + ".png";
 
-            Path imageFile = IMAGE_DIRECTORY
-                    .resolve(safeFilename)
+            Path imageFile = IMAGE_DIRECTORY.resolve(safeFilename)
                     .normalize();
 
             Files.write(imageFile, imageResponse.body());
